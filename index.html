@@ -355,7 +355,7 @@
     .uptime-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 16px; }
     .uptime-pct { font: 700 clamp(28px, 4vw, 40px)/1 "IBM Plex Mono", monospace; color: var(--up); letter-spacing: -.03em; }
     .uptime-pct small { font-size: 14px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
-    .bars { display: flex; gap: 3px; align-items: flex-end; height: 96px; }
+    .bars { display: flex; gap: 3px; align-items: flex-end; height: 140px; }
     .bar {
       flex: 1 1 0;
       min-width: 0;
@@ -500,7 +500,7 @@
       .github-status a { grid-column: 2; justify-self: start; }
       .footer-note { flex-direction: column; gap: 10px; padding: 0 2px; }
       .stamp { white-space: normal; }
-      .bars { height: 72px; }
+      .bars { height: 96px; }
     }
 
     @media (max-width: 420px) {
@@ -595,7 +595,7 @@
 
     <section class="panel" aria-labelledby="uptime-heading">
       <h2 id="uptime-heading">Uptime</h2>
-      <p class="panel-sub">Daily service health for the last 90 days. Amber days had a partial outage. <a href="outage.html" style="color:var(--accent);font-weight:700;">Full outage log &rarr;</a></p>
+      <p class="panel-sub">Daily service health for the last 90 days. Amber days had a partial outage.</p>
       <div class="uptime-head">
         <div class="uptime-pct"><span id="uptime-pct">&mdash;</span><small> &nbsp;uptime</small></div>
         <div class="uptime-legend">
