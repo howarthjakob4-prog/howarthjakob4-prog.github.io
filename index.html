@@ -628,13 +628,19 @@
 
       <div style="height:22px"></div>
 
-      <label class="field">Email <span style="font-weight:400;color:var(--muted)">(optional)</span>
-        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
-        <span class="hint">Saves on this device only. The site owner is emailed automatically if the bot goes down.</span>
-      </label>
-      <div class="btn-row">
-        <button type="button" class="ghost" id="save-email">Save email</button>
-      </div>
+      <form id="alert-form" action="https://formsubmit.co/howarthjakob4@gmail.com" method="POST">
+        <input type="hidden" name="_subject" id="fs-subject" value="N3 outage alert subscription" />
+        <input type="hidden" name="_captcha" value="false" />
+        <input type="hidden" name="_next" id="fs-next" value="https://howarthjakob4-prog.github.io/?subscribed=1" />
+        <label class="field">Email
+          <input type="email" name="email" required placeholder="you@example.com" autocomplete="email" />
+          <span class="hint">One email if the bot goes down, one when it&rsquo;s back. Unsubscribe anytime.</span>
+        </label>
+        <div class="btn-row">
+          <button type="submit" id="btn-subscribe">Notify me</button>
+          <button type="submit" class="ghost" id="btn-unsubscribe">Unsubscribe</button>
+        </div>
+      </form>
       <p class="form-msg" id="sub-msg" aria-live="polite"></p>
     </section>
 
@@ -852,7 +858,6 @@
 
     /* ---------- subscriptions & reports (all local, all functional) ---------- */
     const LS_WEBHOOK = 'nne3-status-webhook';
-    const LS_EMAIL = 'nne3-status-email';
 
     function setMsg(id, text, ok) {
       const el = document.getElementById(id);
@@ -879,14 +884,33 @@
 
     function wireSubscribe() {
       const urlInput = document.getElementById('webhook-url');
-      const emailInput = document.getElementById('email');
       const saved = getWebhook();
       if (saved) {
         urlInput.value = saved;
         setMsg('sub-msg', 'Webhook saved on this device. Hit "Send test alert" anytime to check it.', true);
       }
-      const savedEmail = localStorage.getItem(LS_EMAIL);
-      if (savedEmail) emailInput.value = savedEmail;
+
+      // Outage email alerts: subscribe/unsubscribe form posts to the alert service.
+      const form = document.getElementById('alert-form');
+      if (form) {
+        document.getElementById('btn-unsubscribe').addEventListener('click', () => {
+          document.getElementById('fs-subject').value = 'N3 outage alert unsubscription';
+          document.getElementById('fs-next').value = 'https://howarthjakob4-prog.github.io/?unsubscribed=1';
+        });
+        document.getElementById('btn-subscribe').addEventListener('click', () => {
+          document.getElementById('fs-subject').value = 'N3 outage alert subscription';
+          document.getElementById('fs-next').value = 'https://howarthjakob4-prog.github.io/?subscribed=1';
+        });
+      }
+      // Confirmation message after returning from the alert service.
+      const q = new URLSearchParams(location.search);
+      if (q.get('subscribed') === '1') {
+        setMsg('sub-msg', 'You\u2019re on the list \u2014 you\u2019ll get an email if the bot goes down.', true);
+        history.replaceState(null, '', location.pathname + '#subscribe');
+      } else if (q.get('unsubscribed') === '1') {
+        setMsg('sub-msg', 'You\u2019re off the list. No more outage emails.', true);
+        history.replaceState(null, '', location.pathname + '#subscribe');
+      }
 
       document.getElementById('save-webhook').addEventListener('click', () => {
         const url = urlInput.value.trim();
@@ -920,16 +944,6 @@
           setMsg('sub-msg', 'Couldn\u2019t reach that webhook. Double-check the URL and try again.', false);
         }
         btn.disabled = false;
-      });
-
-      document.getElementById('save-email').addEventListener('click', () => {
-        const email = emailInput.value.trim();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          setMsg('sub-msg', 'Enter a valid email address.', false);
-          return;
-        }
-        localStorage.setItem(LS_EMAIL, email);
-        setMsg('sub-msg', 'Email saved on this device. Email alerts aren\u2019t wired up yet — the Discord webhook above works today.', true);
       });
     }
 
