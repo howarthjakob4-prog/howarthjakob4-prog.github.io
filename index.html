@@ -595,7 +595,7 @@
 
     <section class="panel" aria-labelledby="uptime-heading">
       <h2 id="uptime-heading">Uptime</h2>
-      <p class="panel-sub">Daily service health for the last 90 days. Amber days had a partial outage.</p>
+      <p class="panel-sub">Daily service health for the last 90 days. Amber days had a partial outage. <a href="outage.html" style="color:var(--accent);font-weight:700;">Full outage log &rarr;</a></p>
       <div class="uptime-head">
         <div class="uptime-pct"><span id="uptime-pct">&mdash;</span><small> &nbsp;uptime</small></div>
         <div class="uptime-legend">
@@ -726,7 +726,7 @@
       { name: "Bot hosting",      note: "GitHub Actions runner",                    down: "offline" },
       { name: "Discord API",      note: "discord.com platform",                      down: "degraded" },
       { name: "GitHub",           note: "Actions + status dependency",               down: "degraded" },
-      { name: "This status page", note: "Netlify hosting",                           down: "operational" },
+      { name: "This status page", note: "GitHub Pages hosting",                      down: "operational" },
     ];
 
     function renderComponents() {
