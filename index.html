@@ -94,6 +94,41 @@
       position: relative;
     }
 
+    /* ---------- welcome banner ---------- */
+    .welcome-banner {
+      position: relative;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 52px 11px 16px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      color: #ffffff;
+      background: linear-gradient(100deg, #0a3d24 0%, #078348 48%, #0cbf69 100%);
+      box-shadow: 0 8px 26px rgba(7, 131, 72, .35);
+    }
+    .welcome-banner strong { font-weight: 800; }
+    .welcome-close {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .16);
+      color: #ffffff;
+      font-size: 17px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .welcome-close:hover { background: rgba(255, 255, 255, .34); }
+    .welcome-banner.hidden { display: none; }
+
     /* ---------- hero ---------- */
     .status-card {
       position: relative;
@@ -522,6 +557,10 @@
   </style>
 </head>
 <body>
+  <div class="welcome-banner" id="welcome-banner" role="banner">
+    <span>Welcome to <strong>Nova Nexus 3</strong></span>
+    <button type="button" class="welcome-close" id="welcome-close" aria-label="Dismiss welcome banner">&times;</button>
+  </div>
   <main aria-labelledby="status-heading">
     <section class="status-card" aria-live="polite">
       <div class="copy">
@@ -913,6 +952,21 @@
       });
     }
 
+    function wireWelcomeBanner() {
+      var banner = document.getElementById("welcome-banner");
+      if (!banner) return;
+      try {
+        if (localStorage.getItem("n3-welcome-dismissed") === "1") {
+          banner.classList.add("hidden");
+          return;
+        }
+      } catch (e) {}
+      document.getElementById("welcome-close").addEventListener("click", function () {
+        banner.classList.add("hidden");
+        try { localStorage.setItem("n3-welcome-dismissed", "1"); } catch (e) {}
+      });
+    }
+
     function wireDiscordLogin() {
       var existing = loginProfile();
       if (existing) { showLoggedIn(existing); return; }
@@ -1121,6 +1175,7 @@
     pollBot();
     setInterval(pollBot, 60000);
     wireSubscribe();
+    wireWelcomeBanner();
     wireDiscordLogin();
     wireReport();
   </script>
