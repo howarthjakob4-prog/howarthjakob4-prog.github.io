@@ -296,6 +296,8 @@
     .discord-btn { display: inline-flex; align-items: center; gap: 10px; background: #5865F2; color: #fff; border: 0; border-radius: 8px; padding: 12px 20px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
     .discord-btn:hover { background: #4752c4; }
     .discord-btn svg { width: 22px; height: 22px; fill: #fff; flex: none; }
+    .discord-user { display: flex; align-items: center; gap: 12px; font-size: 15px; flex-wrap: wrap; }
+    .discord-avatar { width: 40px; height: 40px; border-radius: 50%; }
 
     /* ---------- premium section ---------- */
     .price-badge {
@@ -554,7 +556,7 @@
     <section class="panel" aria-labelledby="account-heading">
       <h2 id="account-heading">Account</h2>
       <p class="panel-sub">Log in with Discord to link your community account.</p>
-      <div class="btn-row">
+      <div class="btn-row" id="discord-login-wrap">
         <button type="button" id="discord-login" class="discord-btn">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 01.079.009c.12.099.246.198.373.292a.077.077 0 01-.006.127 12.3 12.3 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.029 19.84 19.84 0 006.002-3.03.077.077 0 00.032-.055c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
           Continue with Discord
@@ -870,33 +872,103 @@
         mins < 1 ? 'Checked just now' : 'Checked ' + mins + ' minute' + (mins === 1 ? '' : 's') + ' ago';
     }
 
-    /* ---------- discord login ---------- */
-    // To switch login on, paste the Discord application's client ID below.
-    // (Discord Developer Portal -> your app -> OAuth2 -> Client ID. Add
-    // https://howarthjakob4-prog.github.io/ as a redirect URI there.
-    // The client secret is never needed on this page.)
+    /* ---------- discord login (PKCE public client: no secret anywhere) ---------- */
     const DISCORD_CLIENT_ID = "1547378706232901653";
     const DISCORD_REDIRECT = "https://howarthjakob4-prog.github.io/";
+    // Set to the Cloudflare worker URL once it is deployed, e.g.
+    // "https://n3-discord-auth.<you>.workers.dev". Empty = login paused.
+    const N3_AUTH_WORKER = "";
+
+    function b64url(buf) {
+      var s = "";
+      var bytes = new Uint8Array(buf);
+      for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+      return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    }
+
+    function pkceChallenge(verifier) {
+      return crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)).then(b64url);
+    }
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+
+    function loginProfile() {
+      try { return JSON.parse(localStorage.getItem("n3-discord-profile") || "null"); }
+      catch (e) { return null; }
+    }
+
+    function showLoggedIn(p) {
+      var wrap = document.getElementById("discord-login-wrap");
+      var avatar = p.avatar ? '<img src="' + esc(p.avatar) + '" alt="" class="discord-avatar" />' : "";
+      wrap.innerHTML = '<div class="discord-user">' + avatar +
+        "<span>Logged in as <strong>" + esc(p.username) + "</strong></span>" +
+        '<button type="button" id="discord-logout" class="ghost">Log out</button></div>';
+      document.getElementById("discord-logout").addEventListener("click", function () {
+        localStorage.removeItem("n3-discord-profile");
+        location.href = DISCORD_REDIRECT;
+      });
+    }
 
     function wireDiscordLogin() {
-      const btn = document.getElementById('discord-login');
+      var existing = loginProfile();
+      if (existing) { showLoggedIn(existing); return; }
+      var btn = document.getElementById("discord-login");
       if (!btn) return;
-      btn.addEventListener('click', function () {
-        if (!DISCORD_CLIENT_ID) {
-          setMsg('login-msg', 'Login is not switched on yet \u2014 the site owner still has to connect the Discord app.', false);
+      btn.addEventListener("click", function () {
+        if (!N3_AUTH_WORKER) {
+          setMsg("login-msg", "Login is almost ready \u2014 the final piece is still deploying. Try again soon.", false);
           return;
         }
-        location.href = 'https://discord.com/oauth2/authorize?client_id=' + encodeURIComponent(DISCORD_CLIENT_ID) +
-          '&redirect_uri=' + encodeURIComponent(DISCORD_REDIRECT) +
-          '&response_type=code&scope=identify';
+        var raw = new Uint8Array(48);
+        crypto.getRandomValues(raw);
+        var verifier = b64url(raw);
+        sessionStorage.setItem("n3-pkce-verifier", verifier);
+        var sraw = new Uint8Array(16);
+        crypto.getRandomValues(sraw);
+        var state = b64url(sraw);
+        sessionStorage.setItem("n3-oauth-state", state);
+        pkceChallenge(verifier).then(function (challenge) {
+          location.href = "https://discord.com/oauth2/authorize?client_id=" + encodeURIComponent(DISCORD_CLIENT_ID) +
+            "&redirect_uri=" + encodeURIComponent(DISCORD_REDIRECT) +
+            "&response_type=code&scope=identify" +
+            "&code_challenge=" + challenge + "&code_challenge_method=S256" +
+            "&state=" + state;
+        });
       });
-      // Back from Discord with a code: showing the name needs a tiny server
-      // piece (code -> token exchange) before it can finish here.
-      const code = new URLSearchParams(location.search).get('code');
-      if (code) {
-        setMsg('login-msg', 'Almost there \u2014 Discord sent you back, but login needs its final server piece before your name can appear here.', true);
-        history.replaceState({}, '', DISCORD_REDIRECT);
+      var params = new URLSearchParams(location.search);
+      var code = params.get("code");
+      if (!code) return;
+      var verifier = sessionStorage.getItem("n3-pkce-verifier");
+      if (params.get("state") !== sessionStorage.getItem("n3-oauth-state") || !verifier) {
+        setMsg("login-msg", "That login attempt did not match \u2014 please try again.", false);
+        return;
       }
+      if (!N3_AUTH_WORKER) {
+        setMsg("login-msg", "Almost there \u2014 the login finisher is still deploying.", true);
+        return;
+      }
+      setMsg("login-msg", "Finishing login\u2026", true);
+      fetch(N3_AUTH_WORKER, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code, code_verifier: verifier })
+      }).then(function (res) {
+        if (!res.ok) throw new Error("exchange failed");
+        return res.json();
+      }).then(function (profile) {
+        localStorage.setItem("n3-discord-profile", JSON.stringify(profile));
+        sessionStorage.removeItem("n3-pkce-verifier");
+        sessionStorage.removeItem("n3-oauth-state");
+        history.replaceState({}, "", DISCORD_REDIRECT);
+        showLoggedIn(profile);
+        setMsg("login-msg", "", true);
+      }).catch(function () {
+        setMsg("login-msg", "Login did not finish \u2014 please try again.", false);
+      });
     }
 
     /* ---------- subscriptions & reports (all local, all functional) ---------- */
