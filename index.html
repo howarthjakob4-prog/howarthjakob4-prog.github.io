@@ -926,11 +926,11 @@
         var raw = new Uint8Array(48);
         crypto.getRandomValues(raw);
         var verifier = b64url(raw);
-        sessionStorage.setItem("n3-pkce-verifier", verifier);
+        localStorage.setItem("n3-pkce-verifier", verifier);
         var sraw = new Uint8Array(16);
         crypto.getRandomValues(sraw);
         var state = b64url(sraw);
-        sessionStorage.setItem("n3-oauth-state", state);
+        localStorage.setItem("n3-oauth-state", state);
         pkceChallenge(verifier).then(function (challenge) {
           location.href = "https://discord.com/oauth2/authorize?client_id=" + encodeURIComponent(DISCORD_CLIENT_ID) +
             "&redirect_uri=" + encodeURIComponent(DISCORD_REDIRECT) +
@@ -942,8 +942,8 @@
       var params = new URLSearchParams(location.search);
       var code = params.get("code");
       if (!code) return;
-      var verifier = sessionStorage.getItem("n3-pkce-verifier");
-      if (params.get("state") !== sessionStorage.getItem("n3-oauth-state") || !verifier) {
+      var verifier = localStorage.getItem("n3-pkce-verifier");
+      if (params.get("state") !== localStorage.getItem("n3-oauth-state") || !verifier) {
         setMsg("login-msg", "That login attempt did not match \u2014 please try again.", false);
         return;
       }
@@ -961,8 +961,8 @@
         return res.json();
       }).then(function (profile) {
         localStorage.setItem("n3-discord-profile", JSON.stringify(profile));
-        sessionStorage.removeItem("n3-pkce-verifier");
-        sessionStorage.removeItem("n3-oauth-state");
+        localStorage.removeItem("n3-pkce-verifier");
+        localStorage.removeItem("n3-oauth-state");
         history.replaceState({}, "", DISCORD_REDIRECT);
         showLoggedIn(profile);
         setMsg("login-msg", "", true);
