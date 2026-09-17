@@ -365,8 +365,8 @@
       opacity: .9;
       transform: scaleY(0);
       transform-origin: bottom;
-      animation: bar-rise .45s ease-out forwards;
     }
+    #uptime-bars.play .bar { animation: bar-rise .45s ease-out forwards; }
     @keyframes bar-rise { to { transform: scaleY(1); } }
     .bar.partial { background: var(--warn); }
     .bar.down { background: var(--danger); }
@@ -955,6 +955,20 @@
     /* ---------- boot ---------- */
     renderComponents();
     renderUptime();
+    // Play the uptime bars whenever they scroll into view (they sit below the fold)
+    (function () {
+      var barsEl = document.getElementById('uptime-bars');
+      function playBars() {
+        barsEl.classList.remove('play');
+        void barsEl.offsetWidth; // restart the animation
+        barsEl.classList.add('play');
+      }
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) { if (e.isIntersecting) playBars(); });
+        }, { threshold: 0.3 }).observe(barsEl);
+      } else { playBars(); }
+    })();
     renderIncidents();
     tickChecked();
     setInterval(tickChecked, 30000);
