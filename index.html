@@ -831,8 +831,6 @@
     const INCIDENTS = [
       { date: "Sep 16, 2026", title: "Bot shut down: duplicate slash commands in Discord", status: "Monitoring",
         body: "Every command appeared twice after the switch to global command registration \u2014 the old server-registered copies were never cleared. The bot was shut down, a cleanup fix was merged (PR #12), and the bot restarted with guild copies cleared. Waiting on confirmation that each command now appears exactly once." },
-      { date: "Sep 16, 2026", title: "Bot restarted with six merged feature updates", status: "Resolved",
-        body: "Premium services, swear-strike moderation, smart DMs, hardened /ban /kick /timeout, the no-overlap run guard, and the self-host disclaimer all went live. Bot confirmed back online in Discord the same day." },
       { date: "Sep 15, 2026", title: "GitHub Actions platform outage", status: "Resolved",
         body: "GitHub had a platform-wide outage. The bot stayed offline until GitHub recovered, then restarted cleanly on the next scheduled run." },
       { date: "Sep 15, 2026", title: "Duplicate bot sessions fighting over one token", status: "Resolved",
