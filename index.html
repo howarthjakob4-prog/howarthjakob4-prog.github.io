@@ -363,7 +363,11 @@
       border-radius: 2px 2px 0 0;
       background: var(--up);
       opacity: .9;
+      transform: scaleY(0);
+      transform-origin: bottom;
+      animation: bar-rise .45s ease-out forwards;
     }
+    @keyframes bar-rise { to { transform: scaleY(1); } }
     .bar.partial { background: var(--warn); }
     .bar.down { background: var(--danger); }
     .uptime-legend { display: flex; gap: 18px; margin-top: 12px; color: var(--muted); font: 500 11px/1 "IBM Plex Mono", monospace; }
@@ -795,7 +799,7 @@
         if (OUTAGE.has(key))      { cls = 'down';    txt = 'Down';           val = 0; }
         else if (PARTIAL.has(key)){ cls = 'partial'; txt = 'Partial outage'; val = 0.5; }
         score += val;
-        html += '<div class="bar ' + cls + '" title="' + label + ' — ' + txt + '"></div>';
+        html += '<div class="bar ' + cls + '" style="animation-delay:' + ((89 - i) * 14) + 'ms" title="' + label + ' — ' + txt + '"></div>';
       }
       wrap.innerHTML = html;
       document.getElementById('uptime-pct').textContent = (score / 90 * 100).toFixed(2) + '%';
