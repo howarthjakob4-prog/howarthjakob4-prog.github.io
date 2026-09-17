@@ -802,7 +802,23 @@
         html += '<div class="bar ' + cls + '" style="animation-delay:' + ((89 - i) * 14) + 'ms" title="' + label + ' — ' + txt + '"></div>';
       }
       wrap.innerHTML = html;
-      document.getElementById('uptime-pct').textContent = (score / 90 * 100).toFixed(2) + '%';
+      // store the target; the number counts up when the section scrolls into view
+      wrap.dataset.target = (score / 90 * 100).toFixed(2);
+    }
+
+    function countUpUptime() {
+      var el = document.getElementById('uptime-pct');
+      var wrap = document.getElementById('uptime-bars');
+      var target = parseFloat(wrap.dataset.target || '0');
+      var dur = 1200, t0 = null;
+      function frame(t) {
+        if (!t0) t0 = t;
+        var p = Math.min((t - t0) / dur, 1);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = (target * eased).toFixed(2) + '%';
+        if (p < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
     }
 
     /* ---------- incident history ---------- */
@@ -962,6 +978,7 @@
         barsEl.classList.remove('play');
         void barsEl.offsetWidth; // restart the animation
         barsEl.classList.add('play');
+        countUpUptime();
       }
       if ('IntersectionObserver' in window) {
         new IntersectionObserver(function (entries) {
