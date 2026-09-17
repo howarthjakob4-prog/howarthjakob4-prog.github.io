@@ -355,7 +355,7 @@
     .uptime-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 16px; }
     .uptime-pct { font: 700 clamp(28px, 4vw, 40px)/1 "IBM Plex Mono", monospace; color: var(--up); letter-spacing: -.03em; }
     .uptime-pct small { font-size: 14px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
-    .bars { display: flex; gap: 3px; align-items: flex-end; height: 64px; }
+    .bars { display: flex; gap: 3px; align-items: flex-end; height: 96px; }
     .bar {
       flex: 1 1 0;
       min-width: 0;
@@ -500,7 +500,7 @@
       .github-status a { grid-column: 2; justify-self: start; }
       .footer-note { flex-direction: column; gap: 10px; padding: 0 2px; }
       .stamp { white-space: normal; }
-      .bars { height: 48px; }
+      .bars { height: 72px; }
     }
 
     @media (max-width: 420px) {
@@ -795,11 +795,11 @@
         const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
         const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         const label = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        let cls = '', txt = 'Up', val = 1;
-        if (OUTAGE.has(key))      { cls = 'down';    txt = 'Down';           val = 0; }
-        else if (PARTIAL.has(key)){ cls = 'partial'; txt = 'Partial outage'; val = 0.5; }
+        let cls = '', txt = 'Up', val = 1, h = '100%';
+        if (OUTAGE.has(key))      { cls = 'down';    txt = 'Down';           val = 0;   h = '14%'; }
+        else if (PARTIAL.has(key)){ cls = 'partial'; txt = 'Partial outage'; val = 0.5; h = '45%'; }
         score += val;
-        html += '<div class="bar ' + cls + '" style="animation-delay:' + ((89 - i) * 14) + 'ms" title="' + label + ' — ' + txt + '"></div>';
+        html += '<div class="bar ' + cls + '" style="height:' + h + ';animation-delay:' + ((89 - i) * 14) + 'ms" title="' + label + ' — ' + txt + '"></div>';
       }
       wrap.innerHTML = html;
       // store the target; the number counts up when the section scrolls into view
