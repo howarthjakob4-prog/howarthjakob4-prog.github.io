@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en" data-state="operational">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#07110e" />
+  <meta name="description" content="Outage log and service charts for the Nova Nexus 3 and Jarvis Discord bots." />
+  <link rel="icon" href="data:," />
+  <title>Nova Nexus 3 — Outage Log</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      color-scheme: light dark;
+      --bg: #edf3f0;
+      --surface: #f9fcfa;
+      --surface-2: #e4ece8;
+      --ink: #102019;
+      --muted: #52655c;
+      --line: #bdccc4;
+      --accent: #078348;
+      --accent-soft: #d7f5e5;
+      --signal: #07a75a;
+      --shadow: 0 22px 70px rgba(9, 39, 26, .12);
+      --grid: rgba(16, 66, 43, .08);
+      --danger: #cc2f3d;
+      --warn: #b97a0c;
+      --up: #07a75a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #050b09;
+        --surface: #0b1511;
+        --surface-2: #111f19;
+        --ink: #eef8f3;
+        --muted: #9cafa4;
+        --line: #22362c;
+        --accent: #19d477;
+        --accent-soft: #0c2c1c;
+        --signal: #2fe988;
+        --shadow: 0 24px 80px rgba(0, 0, 0, .42);
+        --grid: rgba(67, 222, 141, .06);
+        --danger: #ff6672;
+        --warn: #f0a832;
+        --up: #2fe988;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      background:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+        var(--bg);
+      background-size: 42px 42px;
+      color: var(--ink);
+      font-family: "Manrope", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      width: min(1080px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: clamp(32px, 6vw, 72px) 0 48px;
+      position: relative;
+    }
+
+    .topbar { margin-bottom: 22px; }
+    .topbar a {
+      color: var(--muted);
+      text-decoration: none;
+      font: 600 13px/1 "IBM Plex Mono", monospace;
+      letter-spacing: .04em;
+    }
+    .topbar a:hover { color: var(--accent); }
+
+    .panel {
+      margin-top: 26px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      padding: clamp(24px, 4vw, 40px);
+      box-shadow: var(--shadow);
+    }
+    .panel:first-of-type { margin-top: 0; }
+    .panel > h2 {
+      margin: 0 0 6px;
+      font-size: clamp(20px, 2.6vw, 28px);
+      letter-spacing: -.03em;
+    }
+    .panel-sub { margin: 0 0 22px; color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 680px; }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(38px, 7vw, 72px);
+      line-height: .95;
+      letter-spacing: -.06em;
+      font-weight: 800;
+    }
+
+    .state-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 26px;
+      padding: 9px 14px;
+      border: 1px solid var(--line);
+      background: var(--accent-soft);
+      color: var(--accent);
+      font: 600 12px/1 "IBM Plex Mono", monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .light {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--signal);
+      box-shadow: 0 0 0 0 rgba(7, 167, 90, .5);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(7, 167, 90, .5); }
+      70% { box-shadow: 0 0 0 9px transparent; }
+      100% { box-shadow: 0 0 0 0 transparent; }
+    }
+
+    .checked-line {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font: 500 12px/1.6 "IBM Plex Mono", monospace;
+      letter-spacing: .04em;
+    }
+    .checked-line .dot { color: var(--signal); }
+
+    /* ---------- service grid ---------- */
+    .svc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .svc {
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      padding: 16px 18px;
+    }
+    .svc-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .svc-name { font-weight: 700; font-size: 14px; }
+    .svc-note { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font: 600 11px/1 "IBM Plex Mono", monospace;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      white-space: nowrap;
+    }
+    .badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .badge.ok { color: var(--accent); }
+    .badge.off { color: var(--danger); }
+    .badge.deg { color: var(--warn); }
+    .svc-group-label {
+      margin: 26px 0 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .svc-group-label:first-of-type { margin-top: 0; }
+
+    /* ---------- uptime chart ---------- */
+    .uptime-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+    .uptime-pct { font: 700 clamp(34px, 5vw, 52px)/1 "IBM Plex Mono", monospace; color: var(--up); letter-spacing: -.03em; }
+    .uptime-pct small { font-size: 14px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
+    .uptime-legend { display: flex; gap: 18px; color: var(--muted); font: 500 11px/1 "IBM Plex Mono", monospace; }
+    .uptime-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
+    .bars { display: flex; gap: 3px; align-items: flex-end; height: 140px; }
+    .bar {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 100%;
+      border-radius: 2px 2px 0 0;
+      background: var(--up);
+      opacity: .9;
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+    #uptime-bars.play .bar { animation: bar-rise .45s ease-out forwards; }
+    @keyframes bar-rise { to { transform: scaleY(1); } }
+    .bar.partial { background: var(--warn); }
+    .bar.down { background: var(--danger); }
+
+    /* ---------- incident log ---------- */
+    .incident { border-top: 1px solid var(--line); padding: 20px 4px; }
+    .incident:first-of-type { border-top: 0; padding-top: 4px; }
+    .incident-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .incident-title { font-weight: 700; font-size: 16px; }
+    .incident-date { color: var(--muted); font: 500 12px/1 "IBM Plex Mono", monospace; }
+    .incident-body { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 720px; }
+    .tag {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 10px;
+      font: 600 11px/1.4 "IBM Plex Mono", monospace;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--line);
+    }
+    .tag.monitoring { background: #fdf0d7; color: #b97a0c; border-color: #f0d9a8; }
+    @media (prefers-color-scheme: dark) {
+      .tag.monitoring { background: #33230c; color: #f0a832; border-color: #5a421a; }
+    }
+
+    .footer-note { margin-top: 28px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+    @media (max-width: 640px) {
+      .bars { height: 96px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="topbar"><a href="index.html">&larr; Back to status home</a></div>
+
+    <section class="panel" aria-labelledby="page-title">
+      <div class="state-line"><span class="light"></span><span id="overall-state">All systems operational</span></div>
+      <h1 id="page-title">Outage log</h1>
+      <p class="panel-sub">Every incident, every wobble, every fix &mdash; the full record for the Nova Nexus 3 and Jarvis bots. Nothing hidden, nothing rounded away.</p>
+      <p class="checked-line"><span class="dot">&#9679;</span> Checked just now &middot; this log is updated by hand after each incident</p>
+    </section>
+
+    <section class="panel" aria-labelledby="services-heading">
+      <h2 id="services-heading">Bot services</h2>
+      <p class="panel-sub">Live right-now status for each bot and the services around them.</p>
+      <div class="svc-group-label">Nova Nexus 3</div>
+      <div class="svc-grid" id="n3-services"></div>
+      <div class="svc-group-label">Jarvis</div>
+      <div class="svc-grid" id="jarvis-services"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="uptime-heading">
+      <h2 id="uptime-heading">90-day uptime</h2>
+      <p class="panel-sub">Daily service health for the last 90 days. Full-height green bars are clean days. Amber bars dropped to half height on partial-outage days. A red day would drop to a short stub at the bottom.</p>
+      <div class="uptime-head">
+        <div class="uptime-pct"><span id="uptime-pct">&mdash;</span><small> &nbsp;uptime</small></div>
+        <div class="uptime-legend">
+          <span><i style="background:var(--up)"></i>Up</span>
+          <span><i style="background:var(--warn)"></i>Partial</span>
+          <span><i style="background:var(--danger)"></i>Down</span>
+        </div>
+      </div>
+      <div class="bars" id="uptime-bars" role="img" aria-label="90-day uptime bar chart"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="log-heading">
+      <h2 id="log-heading">Incident history</h2>
+      <p class="panel-sub">What broke, what we did about it, and when it was fixed &mdash; newest first.</p>
+      <div id="incident-list"></div>
+    </section>
+
+    <p class="footer-note">Nova Nexus 3 Studios &middot; This log is maintained by hand. If something looks wrong, report it from the status home page.</p>
+  </main>
+
+  <script>
+    /* ---------- services ---------- */
+    const N3_SERVICES = [
+      { name: "Discord bot",      note: "Nova Nexus 3 community service",            cls: "ok",  label: "Operational" },
+      { name: "Slash commands",   note: "/help /ask /rules /ban /kick /timeout",     cls: "ok",  label: "Operational" },
+      { name: "Chat replies",     note: "Mention & reply answers from the engine FAQ", cls: "ok",  label: "Operational" },
+      { name: "Ticket center",    note: "/ticket setup \u00b7 private support channels", cls: "ok",  label: "Operational" },
+      { name: "Announcements",    note: "Engine update webhook posts",               cls: "ok",  label: "Operational" },
+      { name: "Premium services", note: "Custom commands \u00b7 knowledge base \u00b7 schedules", cls: "ok",  label: "Operational" },
+      { name: "Smart DMs",        note: "Nova-aware answers & Wikipedia lookups",    cls: "ok",  label: "Operational" },
+      { name: "Bot hosting",      note: "GitHub Actions runner",                    cls: "ok",  label: "Operational" },
+      { name: "Discord API",      note: "discord.com platform",                      cls: "deg", label: "Degraded" },
+      { name: "GitHub",           note: "Actions + status dependency",               cls: "deg", label: "Degraded" },
+      { name: "This status page", note: "GitHub Pages hosting",                      cls: "ok",  label: "Operational" },
+    ];
+    const JARVIS_SERVICES = [
+      { name: "Jarvis bot",       note: "UE5 Q&A service \u00b7 server invite pending", cls: "deg", label: "Setup" },
+      { name: "Bot hosting",      note: "GitHub Actions runner \u00b7 not yet deployed", cls: "deg", label: "Setup" },
+    ];
+
+    function renderServices() {
+      function grid(elId, list) {
+        document.getElementById(elId).innerHTML = list.map(function (s) {
+          return '<div class="svc"><div class="svc-top"><span class="svc-name">' + s.name +
+            '</span><span class="badge ' + s.cls + '">' + s.label + '</span></div>' +
+            '<p class="svc-note">' + s.note + '</p></div>';
+        }).join('');
+      }
+      grid('n3-services', N3_SERVICES);
+      grid('jarvis-services', JARVIS_SERVICES);
+    }
+
+    /* ---------- uptime (last 90 days) ---------- */
+    // Real partial-outage days; everything else was up. Edit PARTIAL/OUTAGE when history changes.
+    const PARTIAL = new Set(["2026-09-15", "2026-09-16"]);
+    const OUTAGE = new Set([]);
+
+    function renderUptime() {
+      const wrap = document.getElementById('uptime-bars');
+      const today = new Date();
+      let score = 0;
+      let html = '';
+      for (let i = 89; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+        const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const label = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        let cls = '', txt = 'Up', val = 1, h = '100%';
+        if (OUTAGE.has(key))      { cls = 'down';    txt = 'Down';           val = 0;   h = '14%'; }
+        else if (PARTIAL.has(key)){ cls = 'partial'; txt = 'Partial outage'; val = 0.5; h = '45%'; }
+        score += val;
+        html += '<div class="bar ' + cls + '" style="height:' + h + ';animation-delay:' + ((89 - i) * 14) + 'ms" title="' + label + ' \u2014 ' + txt + '"></div>';
+      }
+      wrap.innerHTML = html;
+      wrap.dataset.target = (score / 90 * 100).toFixed(2);
+    }
+
+    function countUpUptime() {
+      var el = document.getElementById('uptime-pct');
+      var wrap = document.getElementById('uptime-bars');
+      var target = parseFloat(wrap.dataset.target || '0');
+      var dur = 1200, t0 = null;
+      function frame(t) {
+        if (!t0) t0 = t;
+        var p = Math.min((t - t0) / dur, 1);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = (target * eased).toFixed(2) + '%';
+        if (p < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    /* ---------- incident history ---------- */
+    const INCIDENTS = [
+      { date: "Sep 16, 2026", title: "Bot shut down: duplicate slash commands in Discord", status: "Monitoring",
+        body: "Every command appeared twice after the switch to global command registration \u2014 the old server-registered copies were never cleared. The bot was shut down, a cleanup fix was merged (PR #12), and the bot restarted with guild copies cleared. Waiting on confirmation that each command now appears exactly once." },
+      { date: "Sep 16, 2026", title: "Bot restarted with six merged feature updates", status: "Resolved",
+        body: "Premium services, swear-strike moderation, smart DMs, hardened /ban /kick /timeout, the no-overlap run guard, and the self-host disclaimer all went live. Bot confirmed back online in Discord the same day." },
+      { date: "Sep 15, 2026", title: "GitHub Actions platform outage", status: "Resolved",
+        body: "GitHub had a platform-wide outage. The bot stayed offline until GitHub recovered, then restarted cleanly on the next scheduled run." },
+      { date: "Sep 15, 2026", title: "Duplicate bot sessions fighting over one token", status: "Resolved",
+        body: "Two workflow runs started at once and fought over the single Discord token. A no-overlap guard now queues runs instead of doubling up." },
+    ];
+
+    function renderIncidents() {
+      document.getElementById('incident-list').innerHTML = INCIDENTS.map(function (n) {
+        var tagCls = n.status === "Monitoring" ? "tag monitoring" : "tag";
+        return '<article class="incident"><div class="incident-head"><span class="incident-title">' + n.title +
+          '</span><span class="incident-date">' + n.date + '</span></div>' +
+          '<p class="incident-body">' + n.body + '</p>' +
+          '<span class="' + tagCls + '">' + n.status + '</span></article>';
+      }).join('');
+    }
+
+    /* ---------- boot ---------- */
+    renderServices();
+    renderUptime();
+    renderIncidents();
+    (function () {
+      var barsEl = document.getElementById('uptime-bars');
+      function playBars() {
+        barsEl.classList.remove('play');
+        void barsEl.offsetWidth;
+        barsEl.classList.add('play');
+        countUpUptime();
+      }
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) { if (e.isIntersecting) playBars(); });
+        }, { threshold: 0.3 }).observe(barsEl);
+      } else { playBars(); }
+    })();
+  </script>
+</body>
+</html>
