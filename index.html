@@ -856,7 +856,7 @@
 
     <section class="panel" id="report" aria-labelledby="report-heading">
       <h2 id="report-heading">Report an issue</h2>
-      <p class="panel-sub">Spotted something wrong? Send it straight to the team channel through your saved webhook.</p>
+      <p class="panel-sub">Spotted something wrong? Log in with Discord or Google at the top of the page, then send it straight to the team channel. Your name can still be "anonymous".</p>
       <label class="field">Your name
         <input type="text" id="rep-name" placeholder="e.g. Commander Shepard" autocomplete="name" />
       </label>
@@ -1151,7 +1151,7 @@
         pkceChallenge(verifier).then(function (challenge) {
           location.href = "https://discord.com/oauth2/authorize?client_id=" + encodeURIComponent(DISCORD_CLIENT_ID) +
             "&redirect_uri=" + encodeURIComponent(DISCORD_REDIRECT) +
-            "&response_type=code&scope=identify" +
+            "&response_type=code&scope=identify%20email" +
             "&code_challenge=" + challenge + "&code_challenge_method=S256" +
             "&state=" + state;
         });
@@ -1230,7 +1230,7 @@
         setMsg("login-msg", "Google login did not finish \u2014 please try again.", false);
         return;
       }
-      var profile = { id: payload.sub, name: payload.name, email: payload.email, picture: payload.picture };
+      var profile = { id: payload.sub, name: payload.name, email: payload.email, email_verified: !!payload.email_verified, picture: payload.picture };
       localStorage.setItem("n3-google-profile", JSON.stringify(profile));
       showGoogleLoggedIn(profile);
       setMsg("login-msg", "", true);
@@ -1371,14 +1371,20 @@
           setMsg('rep-msg', 'Describe what\u2019s happening first.', false);
           return;
         }
+        /* verified identity required: log in with Discord or Google first (name may still be "anonymous") */
+        var rdp = loginProfile();
+        var rgp = googleProfile();
+        var verified = null;
+        if (rdp && rdp.username) verified = 'Discord: ' + rdp.username + (rdp.email ? ' <' + rdp.email + '>' : '') + (rdp.id ? ' (ID ' + rdp.id + ')' : '');
+        else if (rgp && rgp.email_verified && rgp.email) verified = 'Google: ' + (rgp.name || 'Google user') + ' <' + rgp.email + '>';
+        else if (rgp && (rgp.name || rgp.email)) verified = 'Google: ' + (rgp.name || 'Google user') + (rgp.email ? ' <' + rgp.email + '>' : '') + ' (email not verified by Google)';
+        if (!verified) {
+          setMsg('rep-msg', 'Log in with Discord or Google at the top of the page first \u2014 reports need a verified identity. You can still use "anonymous" as your name.', false);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
         btn.disabled = true;
         try {
-          /* verified identity: whoever is logged in via Discord/Google in this browser */
-          var verified = null;
-          var rdp = loginProfile();
-          var rgp = googleProfile();
-          if (rdp && rdp.username) verified = 'Discord: ' + rdp.username + (rdp.id ? ' (ID ' + rdp.id + ')' : '');
-          else if (rgp && (rgp.name || rgp.email)) verified = 'Google: ' + (rgp.name || 'Google user') + (rgp.email ? ' <' + rgp.email + '>' : '');
           await postToDiscord(url, {
             embeds: [{
               title: '\ud83d\udea8 Issue reported from the status page',
