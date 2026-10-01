@@ -150,10 +150,30 @@
     .hero-profile .form-msg { color: rgba(255, 255, 255, .85); }
     .hero-profile .form-msg.ok { color: #7be3a8; }
     .hero-profile .form-msg.err { color: #ff9d9d; }
+
+    /* ---------- 3D hero ---------- */
+    .hero { perspective: 1400px; }
+    .hero-inner { transform-style: preserve-3d; will-change: transform; transition: transform .3s ease-out; }
+    .hero-title { transform: translateZ(46px); }
+    .hero-profile { transform: translateZ(88px); }
+    .hero-orb { position: absolute; z-index: 0; border-radius: 50%; filter: blur(70px); opacity: .45; pointer-events: none; }
+    .orb-a { width: 340px; height: 340px; left: -90px; top: -110px; background: #0f8a4d; animation: orb-drift-a 16s ease-in-out infinite alternate; }
+    .orb-b { width: 300px; height: 300px; right: -80px; bottom: -130px; background: #1d5fd1; animation: orb-drift-b 21s ease-in-out infinite alternate; }
+    @keyframes orb-drift-a { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(70px, 46px, 0) scale(1.12); } }
+    @keyframes orb-drift-b { from { transform: translate3d(0, 0, 0) scale(1.08); } to { transform: translate3d(-56px, -40px, 0) scale(1); } }
+    @media (hover: hover) and (pointer: fine) {
+      .comp, .github-status, .discord-status { transition: transform .28s ease, box-shadow .28s ease; }
+      .comp:hover, .github-status:hover, .discord-status:hover { transform: perspective(900px) rotateX(2deg) rotateY(-2deg) translateY(-3px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero { animation: none; }
+      .hero-orb { animation: none; }
+      .hero-inner { transition: none; }
+      .comp:hover, .github-status:hover, .discord-status:hover { transform: none; }
+    }
     @media (max-width: 720px) {
       .hero-profile { flex: 1 1 100%; margin-left: 0; }
     }
-    @media (prefers-reduced-motion: reduce) { .hero { animation: none; } }
 
     /* ---------- small polish ---------- */
     section[id] { scroll-margin-top: 18px; }
@@ -349,7 +369,7 @@
     }
     .incident-meta { font: 500 12px/1.6 "IBM Plex Mono", monospace; color: var(--muted); }
     @keyframes incident-in {
-      from { opacity: 0; transform: translateY(14px); }
+      from { opacity: 0; transform: perspective(900px) translateY(14px) rotateX(9deg); }
       to { opacity: 1; transform: none; }
     }
     @keyframes incident-pulse {
@@ -701,6 +721,8 @@
 <body>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <header class="hero" role="banner">
+    <span class="hero-orb orb-a" aria-hidden="true"></span>
+    <span class="hero-orb orb-b" aria-hidden="true"></span>
     <div class="hero-inner">
       <div class="hero-title">
         <h1>Nova Nexus 3</h1>
@@ -1372,6 +1394,30 @@
       });
     }
 
+    /* ---------- 3D hero tilt (mouse parallax) ---------- */
+    function wireHeroTilt() {
+      var hero = document.querySelector('.hero');
+      var inner = document.querySelector('.hero-inner');
+      if (!hero || !inner) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (window.matchMedia('(hover: none)').matches) return;
+      var raf = null;
+      hero.addEventListener('mousemove', function (e) {
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(function () {
+          var r = hero.getBoundingClientRect();
+          var px = (e.clientX - r.left) / r.width - 0.5;
+          var py = (e.clientY - r.top) / r.height - 0.5;
+          inner.style.transform =
+            'rotateY(' + (px * 7).toFixed(2) + 'deg) rotateX(' + (-py * 7).toFixed(2) + 'deg)';
+        });
+      });
+      hero.addEventListener('mouseleave', function () {
+        if (raf) cancelAnimationFrame(raf);
+        inner.style.transform = '';
+      });
+    }
+
     /* ---------- discord status (live from discordstatus.com) ---------- */
     function loadDiscordStatus() {
       var mark = document.getElementById('discord-mark');
@@ -1404,6 +1450,7 @@
     renderComponents();
     renderUptime();
     loadDiscordStatus();
+    wireHeroTilt();
     // Play the uptime bars whenever they scroll into view (they sit below the fold)
     (function () {
       var barsEl = document.getElementById('uptime-bars');
