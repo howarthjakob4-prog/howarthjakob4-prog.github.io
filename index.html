@@ -153,7 +153,12 @@
 
     /* ---------- 3D hero ---------- */
     .hero { perspective: 1400px; }
-    .hero-inner { transform-style: preserve-3d; will-change: transform; transition: transform .3s ease-out; }
+    .hero-inner { transform-style: preserve-3d; will-change: transform; transition: transform .3s ease-out; animation: hero-sway 9s ease-in-out infinite; }
+    .hero-inner.tilt-active { animation: none; }
+    @keyframes hero-sway {
+      0%, 100% { transform: rotateY(-4.5deg) rotateX(2.5deg); }
+      50% { transform: rotateY(4.5deg) rotateX(-2.5deg); }
+    }
     .hero-title { transform: translateZ(46px); }
     .hero-profile { transform: translateZ(88px); }
     .hero-orb { position: absolute; z-index: 0; border-radius: 50%; filter: blur(70px); opacity: .45; pointer-events: none; }
@@ -168,7 +173,7 @@
     @media (prefers-reduced-motion: reduce) {
       .hero { animation: none; }
       .hero-orb { animation: none; }
-      .hero-inner { transition: none; }
+      .hero-inner { transition: none; animation: none; }
       .comp:hover, .github-status:hover, .discord-status:hover { transform: none; }
     }
     @media (max-width: 720px) {
@@ -1405,6 +1410,7 @@
       hero.addEventListener('mousemove', function (e) {
         if (raf) cancelAnimationFrame(raf);
         raf = requestAnimationFrame(function () {
+          inner.classList.add('tilt-active'); /* pause the idle sway, mouse takes over */
           var r = hero.getBoundingClientRect();
           var px = (e.clientX - r.left) / r.width - 0.5;
           var py = (e.clientY - r.top) / r.height - 0.5;
@@ -1414,6 +1420,7 @@
       });
       hero.addEventListener('mouseleave', function () {
         if (raf) cancelAnimationFrame(raf);
+        inner.classList.remove('tilt-active'); /* hand back to the idle sway */
         inner.style.transform = '';
       });
     }
