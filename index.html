@@ -932,7 +932,9 @@
 
     /* ---------- uptime (last 90 days) ---------- */
     // Real partial-outage days; everything else was up. Edit PARTIAL/OUTAGE when history changes.
-    const PARTIAL = new Set(["2026-09-15", "2026-09-16"]);
+    // Recalibrated 2026-10-01 from bot-monitor/monitor.log state transitions (runner outages):
+    // Sep 21 (2 outages), Sep 27, Sep 28 (3), Sep 29 (3), Sep 30 (3), Oct 1 (2, incl. ongoing).
+    const PARTIAL = new Set(["2026-09-15", "2026-09-16", "2026-09-21", "2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01"]);
     const OUTAGE = new Set([]);
 
     function renderUptime() {
