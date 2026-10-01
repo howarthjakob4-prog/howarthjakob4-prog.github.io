@@ -12,47 +12,24 @@
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap');
 
     :root {
-      color-scheme: light dark;
-      --bg: #eceef1;
-      --surface: #f8f9fb;
-      --surface-2: #e3e7ec;
-      --ink: #111418;
-      --muted: #5b6470;
-      --line: #c2c9d2;
-      --accent: #078348;
-      --accent-bright: #0cbf69;
-      --accent-soft: #d7f5e5;
-      --signal: #07a75a;
-      --shadow: 0 22px 70px rgba(15, 25, 35, .12);
-      --grid: rgba(20, 30, 45, .07);
-      --danger: #cc2f3d;
-      --danger-soft: #fde6e8;
-      --warn: #b97a0c;
-      --up: #07a75a;      --warn-soft: #fdf0d7;
-      --input-bg: #ffffff;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #090b0e;
-        --surface: #10141a;
-        --surface-2: #161c25;
-        --ink: #edf1f6;
-        --muted: #99a3b1;
-        --line: #222b36;
-        --accent: #19d477;
-        --accent-bright: #54ef9f;
-        --accent-soft: #0c2c1c;
-        --signal: #2fe988;
-        --shadow: 0 24px 80px rgba(0, 0, 0, .42);
-        --grid: rgba(120, 140, 170, .07);
-        --danger: #ff6672;
-        --danger-soft: #351218;
-        --warn: #f0a832;
-        --up: #2fe988;
-        --warn-soft: #33230c;
-        --input-bg: #0e1a14;
-      }
+      color-scheme: dark;
+      --bg: #000000;
+      --surface: #10141a;
+      --surface-2: #161c25;
+      --ink: #edf1f6;
+      --muted: #99a3b1;
+      --line: #222b36;
+      --accent: #19d477;
+      --accent-bright: #54ef9f;
+      --accent-soft: #0c2c1c;
+      --signal: #2fe988;
+      --shadow: 0 24px 80px rgba(0, 0, 0, .42);
+      --grid: rgba(120, 140, 170, .07);
+      --danger: #ff6672;
+      --danger-soft: #351218;
+      --warn: #f0a832;
+      --up: #2fe988;      --warn-soft: #33230c;
+      --input-bg: #0e1a14;
     }
 
     html[data-state="down"] {
@@ -94,11 +71,8 @@
       inset: 0;
       z-index: -1;
       pointer-events: none;
-      background: url("ships-bg.jpg") center 20% / cover no-repeat;
-      opacity: .5;
-    }
-    @media (prefers-color-scheme: dark) {
-      body::after { opacity: .16; }
+      background: url("ships-bg-dark.jpg") center 20% / cover no-repeat;
+      opacity: .85;
     }
 
     main {
