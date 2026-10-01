@@ -860,6 +860,9 @@
       <label class="field">Your name
         <input type="text" id="rep-name" placeholder="e.g. Commander Shepard" autocomplete="name" />
       </label>
+      <label class="field">How can we reach you? (optional)
+        <input type="text" id="rep-contact" placeholder="Discord username or email" autocomplete="email" />
+      </label>
       <label class="field">What&rsquo;s happening?
         <textarea id="rep-body" placeholder="Describe what you saw&hellip;"></textarea>
       </label>
@@ -1356,6 +1359,7 @@
       document.getElementById('send-report').addEventListener('click', async (e) => {
         const btn = e.currentTarget;
         const name = document.getElementById('rep-name').value.trim();
+        const contact = document.getElementById('rep-contact').value.trim();
         const body = document.getElementById('rep-body').value.trim();
         const url = getWebhook();
         if (!looksLikeWebhook(url)) {
@@ -1374,7 +1378,10 @@
               title: '\ud83d\udea8 Issue reported from the status page',
               description: body,
               color: 0xb97a0c,
-              fields: name ? [{ name: 'Reported by', value: name, inline: true }] : [],
+              fields: [
+                ...(name ? [{ name: 'Reported by', value: name, inline: true }] : []),
+                ...(contact ? [{ name: 'Contact', value: contact, inline: true }] : []),
+              ],
               timestamp: new Date().toISOString(),
             }],
           });
