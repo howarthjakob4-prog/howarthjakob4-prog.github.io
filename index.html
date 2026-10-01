@@ -617,6 +617,29 @@
     .github-status a { color: var(--accent); font: 600 12px/1.3 "IBM Plex Mono", monospace; text-underline-offset: 4px; }
     .github-status a:hover { color: var(--accent-bright); }
 
+    /* ---------- discord aside (twin of github aside) ---------- */
+    .discord-status {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      margin-top: 14px;
+      padding: 18px 22px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+    .discord-mark {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--signal);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--signal) 50%, transparent);
+    }
+    .discord-status h2 { margin: 0 0 3px; font-size: 14px; line-height: 1.3; }
+    .discord-status p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .discord-status a { color: var(--accent); font: 600 12px/1.3 "IBM Plex Mono", monospace; text-underline-offset: 4px; }
+    .discord-status a:hover { color: var(--accent-bright); }
+
     .footer-note {
       display: flex;
       justify-content: space-between;
@@ -643,6 +666,8 @@
       .panel { margin-top: 16px; }
       .github-status { grid-template-columns: auto minmax(0, 1fr); padding: 17px 18px; }
       .github-status a { grid-column: 2; justify-self: start; }
+      .discord-status { grid-template-columns: auto minmax(0, 1fr); padding: 17px 18px; }
+      .discord-status a { grid-column: 2; justify-self: start; }
       .footer-note { flex-direction: column; gap: 10px; padding: 0 2px; }
       .stamp { white-space: normal; }
       .bars { height: 96px; }
@@ -837,6 +862,15 @@
         <p>The bot runs on GitHub Actions. If GitHub has an outage, the bot may go offline until GitHub service is restored.</p>
       </div>
       <a href="https://githubstatus.com" target="_blank" rel="noopener noreferrer">View GitHub status</a>
+    </aside>
+
+    <aside class="discord-status" aria-labelledby="discord-status-heading">
+      <span class="discord-mark" id="discord-mark" aria-hidden="true"></span>
+      <div>
+        <h2 id="discord-status-heading">Discord Status</h2>
+        <p id="discord-status-text">Checking Discord&rsquo;s current status&hellip;</p>
+      </div>
+      <a href="https://discordstatus.com" target="_blank" rel="noopener noreferrer">View Discord status</a>
     </aside>
 
     <footer class="footer-note">
@@ -1338,9 +1372,38 @@
       });
     }
 
+    /* ---------- discord status (live from discordstatus.com) ---------- */
+    function loadDiscordStatus() {
+      var mark = document.getElementById('discord-mark');
+      var txt = document.getElementById('discord-status-text');
+      if (!mark || !txt) return;
+      function setState(color, label) {
+        mark.style.background = color;
+        mark.style.boxShadow = '0 0 10px ' + color;
+        txt.textContent = label;
+      }
+      var cs = getComputedStyle(document.documentElement);
+      var up = cs.getPropertyValue('--up').trim() || '#07a75a';
+      var warn = cs.getPropertyValue('--warn').trim() || '#b97a0c';
+      var danger = cs.getPropertyValue('--danger').trim() || '#cc2f3d';
+      fetch('https://discordstatus.com/api/v2/status.json')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var st = (d && d.status) || {};
+          if (st.indicator === 'none') setState(up, st.description || 'All systems operational.');
+          else if (st.indicator === 'minor') setState(warn, st.description || 'Partially degraded service.');
+          else if (st.indicator) setState(danger, st.description || 'Service disruption.');
+          else txt.textContent = 'Live status unavailable — see discordstatus.com.';
+        })
+        .catch(function () {
+          txt.textContent = 'Live status unavailable — see discordstatus.com.';
+        });
+    }
+
     /* ---------- boot ---------- */
     renderComponents();
     renderUptime();
+    loadDiscordStatus();
     // Play the uptime bars whenever they scroll into view (they sit below the fold)
     (function () {
       var barsEl = document.getElementById('uptime-bars');
