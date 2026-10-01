@@ -1373,6 +1373,12 @@
         }
         btn.disabled = true;
         try {
+          /* verified identity: whoever is logged in via Discord/Google in this browser */
+          var verified = null;
+          var rdp = loginProfile();
+          var rgp = googleProfile();
+          if (rdp && rdp.username) verified = 'Discord: ' + rdp.username + (rdp.id ? ' (ID ' + rdp.id + ')' : '');
+          else if (rgp && (rgp.name || rgp.email)) verified = 'Google: ' + (rgp.name || 'Google user') + (rgp.email ? ' <' + rgp.email + '>' : '');
           await postToDiscord(url, {
             embeds: [{
               title: '\ud83d\udea8 Issue reported from the status page',
@@ -1381,6 +1387,7 @@
               fields: [
                 ...(name ? [{ name: 'Reported by', value: name, inline: true }] : []),
                 ...(contact ? [{ name: 'Contact', value: contact, inline: true }] : []),
+                ...(verified ? [{ name: 'Verified login', value: verified, inline: false }] : []),
               ],
               timestamp: new Date().toISOString(),
             }],
