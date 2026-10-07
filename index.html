@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-state="operational">
+<html lang="en" data-state="down">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -547,6 +547,62 @@
     .uptime-legend { display: flex; gap: 18px; margin-top: 12px; color: var(--muted); font: 500 11px/1 "IBM Plex Mono", monospace; }
     .uptime-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
 
+    /* ---------- announcement banner ---------- */
+    .announce-banner {
+      margin-top: 26px;
+      border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+      background: color-mix(in srgb, var(--warn) 10%, var(--surface));
+      padding: 20px 24px;
+    }
+    .announce-banner[hidden] { display: none; }
+    .announce-eyebrow {
+      font: 600 11px/1.4 "IBM Plex Mono", monospace;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--warn);
+    }
+    .announce-banner p { margin: 8px 0 4px; font-size: 15px; line-height: 1.6; }
+    .announce-date { font: 500 12px/1 "IBM Plex Mono", monospace; color: var(--muted); }
+
+    /* ---------- uptime calendar ---------- */
+    .cal-month { margin-top: 18px; }
+    .cal-month:first-of-type { margin-top: 4px; }
+    .cal-title {
+      font: 600 13px/1.4 "IBM Plex Mono", monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 10px;
+    }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-dow {
+      font: 600 10px/1 "IBM Plex Mono", monospace;
+      color: var(--muted);
+      text-transform: uppercase;
+      text-align: center;
+      padding: 4px 0;
+    }
+    .cal-day {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 500 11px/1 "IBM Plex Mono", monospace;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .cal-day.up { background: color-mix(in srgb, var(--up) 25%, transparent); border-color: color-mix(in srgb, var(--up) 40%, transparent); color: var(--ink); }
+    .cal-day.partial { background: color-mix(in srgb, var(--warn) 30%, transparent); border-color: color-mix(in srgb, var(--warn) 45%, transparent); color: var(--ink); }
+    .cal-day.down { background: color-mix(in srgb, var(--danger) 30%, transparent); border-color: color-mix(in srgb, var(--danger) 45%, transparent); color: var(--ink); }
+    .cal-day.future { opacity: .35; }
+    .cal-day.empty { background: transparent; border-color: transparent; }
+
+    /* ---------- live bot status ---------- */
+    .live-note { margin: 16px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.6; max-width: 720px; }
+    .live-checked { font: 500 11px/1.5 "IBM Plex Mono", monospace; color: var(--muted); display: block; margin-top: 6px; }
+
     /* ---------- forms ---------- */
     label.field { display: block; margin: 0 0 16px; font-size: 13px; font-weight: 700; }
     label.field span.hint { display: block; margin-top: 6px; font-weight: 400; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
@@ -741,6 +797,18 @@
     </div>
   </header>
   <main aria-labelledby="status-heading">
+    <!-- ============================================================
+         ANNOUNCEMENT BANNER
+         To post an announcement: find  const ANNOUNCEMENT =  in the
+         <script> below, set  show: true  and write your message.
+         Set  show: false  to hide the banner again.
+         ============================================================ -->
+    <div class="announce-banner" id="announce-banner" role="status" hidden>
+      <span class="announce-eyebrow">Announcement</span>
+      <p id="announce-text"></p>
+      <span class="announce-date" id="announce-date"></span>
+    </div>
+
     <section class="status-card" aria-live="polite">
       <div class="copy">
         <div class="state-line">
@@ -769,6 +837,13 @@
           <div class="server"><span class="vents"></span><span class="leds"><i class="led"></i><i class="led"></i></span></div>
         </div>
       </div>
+    </section>
+
+    <section class="panel" aria-labelledby="live-heading">
+      <h2 id="live-heading">Live bot status</h2>
+      <p class="panel-sub">A direct check of whether each bot is online right now. This is a static page with no backend, so checks run in your browser &mdash; the notes below say honestly what each check can and can&rsquo;t tell us.</p>
+      <div class="comp-grid" id="live-grid"></div>
+      <p class="live-note" id="live-note"></p>
     </section>
 
     <div class="incident-banner" role="alert">
@@ -800,12 +875,8 @@
 
     <section class="panel" aria-labelledby="jarvis-heading">
       <h2 id="jarvis-heading">Jarvis</h2>
-      <p class="panel-sub">UE5 &amp; game-development Q&amp;A bot &mdash; offline: having some errors and communication problems. Expected back within 24 hours.</p>
-      <div class="comp-grid">
-        <div class="comp"><div class="comp-top"><span class="comp-name">Jarvis bot</span><span class="badge off">Offline</span></div><p class="comp-note">UE5 Q&amp;A service &middot; errors &amp; communication problems</p></div>
-        <div class="comp"><div class="comp-top"><span class="comp-name">Slash commands</span><span class="badge off">Offline</span></div><p class="comp-note">/ask /todo /help</p></div>
-        <div class="comp"><div class="comp-top"><span class="comp-name">Bot hosting</span><span class="badge off">Offline</span></div><p class="comp-note">GitHub Actions runner &middot; workflow disabled</p></div>
-      </div>
+      <p class="panel-sub">UE5 &amp; game-development Q&amp;A bot &mdash; tracked as its own service, separate from Nova Nexus 3. Currently offline while bot workflows are disabled.</p>
+      <div class="comp-grid" id="jarvis-grid"></div>
     </section>
 
     <section class="panel" aria-labelledby="uptime-heading">
@@ -820,6 +891,9 @@
         </div>
       </div>
       <div class="bars" id="uptime-bars" role="img" aria-label="90-day uptime bar chart"></div>
+      <h3 class="mini-heading">Day-by-day calendar</h3>
+      <p class="panel-sub">Each day&rsquo;s status at a glance &mdash; green was up, amber had a partial outage, red was down.</p>
+      <div id="uptime-cal"></div>
     </section>
 
 
@@ -903,8 +977,9 @@
 
   <script>
     /* One switch controls the full incident presentation.
-       Change STATE to "down" when a real outage is confirmed and rebuild. */
-    let STATE = "operational";
+       "down" = outage confirmed (bot workflows disabled Oct 5, 2026).
+       Flip back to "operational" only when the bot is truly back. */
+    let STATE = "down";
     try {
       const q = new URLSearchParams(location.search).get("state");
       if (q === "down" || q === "operational") STATE = q; /* preview override */
@@ -913,6 +988,26 @@
     document.getElementById('stamp').textContent = 'STATUS / ' + STATE.toUpperCase();
 
     const IS_DOWN = STATE === "down";
+
+    /* ---------- announcement banner ---------- */
+    // EDIT THIS to post an announcement on the page.
+    // Set show:true and write your message; set show:false to hide it.
+    const ANNOUNCEMENT = {
+      show: false,
+      date: "Oct 7, 2026",
+      text: "Example announcement — replace this text with your update."
+    };
+    function renderAnnouncement() {
+      const b = document.getElementById('announce-banner');
+      if (!b) return;
+      if (ANNOUNCEMENT.show && ANNOUNCEMENT.text) {
+        document.getElementById('announce-text').textContent = ANNOUNCEMENT.text;
+        document.getElementById('announce-date').textContent = ANNOUNCEMENT.date || '';
+        b.hidden = false;
+      } else {
+        b.hidden = true;
+      }
+    }
 
     /* ---------- services ---------- */
     // down: "offline" turns red, "degraded" turns amber, "operational" stays green.
@@ -937,6 +1032,28 @@
         const badge = s === "operational"
           ? '<span class="badge ok">Operational</span>'
           : s === "degraded"
+            ? '<span class="badge deg">Degraded</span>'
+            : '<span class="badge off">Offline</span>';
+        return '<div class="comp"><div class="comp-top"><span class="comp-name">' + c.name + '</span>' + badge +
+               '</div><p class="comp-note">' + c.note + '</p></div>';
+      }).join('');
+    }
+
+    /* ---------- jarvis services (tracked separately from Nova Nexus 3) ---------- */
+    // Jarvis bot is offline: bot workflows disabled since Oct 5, 2026.
+    // Flip a service to "operational" only when it is truly back.
+    const JARVIS_COMPONENTS = [
+      { name: "Jarvis bot",     note: "UE5 & game-dev Q&A service",              status: "offline" },
+      { name: "Slash commands", note: "/ask /todo /help",                        status: "offline" },
+      { name: "Bot hosting",    note: "GitHub Actions runner \u00b7 workflow disabled", status: "offline" },
+    ];
+    function renderJarvis() {
+      const grid = document.getElementById('jarvis-grid');
+      if (!grid) return;
+      grid.innerHTML = JARVIS_COMPONENTS.map(function (c) {
+        const badge = c.status === "operational"
+          ? '<span class="badge ok">Operational</span>'
+          : c.status === "degraded"
             ? '<span class="badge deg">Degraded</span>'
             : '<span class="badge off">Offline</span>';
         return '<div class="comp"><div class="comp-top"><span class="comp-name">' + c.name + '</span>' + badge +
@@ -988,6 +1105,15 @@
     // Sep 21 (2 outages), Sep 27, Sep 28 (3), Sep 29 (3), Sep 30 (3), Oct 1 (2, incl. ongoing).
     const PARTIAL = new Set(["2026-09-15", "2026-09-16", "2026-09-21", "2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01"]);
     const OUTAGE = new Set([]);
+    // Bot workflows disabled Oct 5, 2026 — every day from here counts as down
+    // until STATE flips back to "operational". (YYYY-MM-DD compares correctly.)
+    const DOWNTIME_START = "2026-10-05";
+    function dayStatus(key) {
+      if (key >= DOWNTIME_START) return "down";
+      if (OUTAGE.has(key)) return "down";
+      if (PARTIAL.has(key)) return "partial";
+      return "up";
+    }
 
     function renderUptime() {
       const wrap = document.getElementById('uptime-bars');
@@ -998,15 +1124,45 @@
         const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
         const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         const label = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        const st = dayStatus(key);
         let cls = '', txt = 'Up', val = 1, h = '100%';
-        if (OUTAGE.has(key))      { cls = 'down';    txt = 'Down';           val = 0;   h = '14%'; }
-        else if (PARTIAL.has(key)){ cls = 'partial'; txt = 'Partial outage'; val = 0.5; h = '45%'; }
+        if (st === 'down')        { cls = 'down';    txt = 'Down';           val = 0;   h = '14%'; }
+        else if (st === 'partial'){ cls = 'partial'; txt = 'Partial outage'; val = 0.5; h = '45%'; }
         score += val;
         html += '<div class="bar ' + cls + '" style="height:' + h + ';animation-delay:' + ((89 - i) * 14) + 'ms" title="' + label + ' — ' + txt + '"></div>';
       }
       wrap.innerHTML = html;
       // store the target; the number counts up when the section scrolls into view
       wrap.dataset.target = (score / 90 * 100).toFixed(2);
+    }
+
+    /* ---------- uptime calendar (day-by-day grid, current + previous month) ---------- */
+    function renderUptimeCalendar() {
+      const host = document.getElementById('uptime-cal');
+      if (!host) return;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const months = [];
+      for (let m = 1; m >= 0; m--) months.push(new Date(today.getFullYear(), today.getMonth() - m, 1));
+      const dowNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+      host.innerHTML = months.map(function (first) {
+        const y = first.getFullYear(), mo = first.getMonth();
+        const title = first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+        const startDow = new Date(y, mo, 1).getDay();
+        const daysInMonth = new Date(y, mo + 1, 0).getDate();
+        let cells = dowNames.map(function (d) { return '<div class="cal-dow">' + d + '</div>'; }).join('');
+        for (let i = 0; i < startDow; i++) cells += '<div class="cal-day empty"></div>';
+        for (let day = 1; day <= daysInMonth; day++) {
+          const key = y + '-' + String(mo + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+          const d = new Date(y, mo, day);
+          const isFuture = d > today;
+          const st = isFuture ? 'future' : dayStatus(key);
+          const label = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          const txt = isFuture ? 'Future' : st === 'down' ? 'Down' : st === 'partial' ? 'Partial outage' : 'Up';
+          cells += '<div class="cal-day ' + st + '" title="' + label + ' \u2014 ' + txt + '">' + day + '</div>';
+        }
+        return '<div class="cal-month"><div class="cal-title">' + title + '</div><div class="cal-grid">' + cells + '</div></div>';
+      }).join('');
     }
 
     function countUpUptime() {
@@ -1063,6 +1219,72 @@
       }).join('');
     }
 
+
+    /* ---------- live bot status (dedicated panel, honest checks) ---------- */
+    // This is a static page with no backend. The ONLY live signal available
+    // is Discord's public widget API — and only when the server enables the
+    // widget (this server has it disabled). So the Nova check reports
+    // Online / Offline / Unknown honestly instead of guessing. Jarvis has no
+    // public live signal at all. Neither check can see GitHub Actions
+    // workflows — runner status is tracked in Services above.
+    const LIVE_BOTS = [
+      { id: "nova",   name: "Nova Nexus 3 bot", note: "Community Discord bot", check: "widget" },
+      { id: "jarvis", name: "Jarvis bot",       note: "UE5 & game-dev Q&A bot", check: "none" },
+    ];
+    const liveState = {};
+    function renderLiveStatus() {
+      const grid = document.getElementById('live-grid');
+      if (!grid) return;
+      grid.innerHTML = LIVE_BOTS.map(function (b) {
+        const s = liveState[b.id] || { status: "checking" };
+        let badge, detail;
+        if (s.status === "online") {
+          badge = '<span class="badge ok">Online</span>';
+          detail = 'Responding on Discord right now <span class="live-dot"></span>';
+        } else if (s.status === "offline") {
+          badge = '<span class="badge off">Offline</span>';
+          detail = s.detail || 'Not currently online in Discord';
+        } else if (s.status === "uncheckable") {
+          badge = '<span class="badge deg">Unknown</span>';
+          detail = 'No live check available for this bot \u2014 see the note below';
+        } else if (s.status === "unknown") {
+          badge = '<span class="badge deg">Unknown</span>';
+          detail = s.detail || 'Live check unavailable';
+        } else {
+          badge = '<span class="badge deg">Checking</span>';
+          detail = 'Checking\u2026';
+        }
+        const checked = s.checkedAt ? '<span class="live-checked">Last checked: ' + s.checkedAt + '</span>' : '';
+        return '<div class="comp"><div class="comp-top"><span class="comp-name">' + b.name + '</span>' + badge +
+               '</div><p class="comp-note">' + b.note + ' \u00b7 ' + detail + checked + '</p></div>';
+      }).join('');
+      const note = document.getElementById('live-note');
+      if (note) {
+        note.textContent = 'How this works: the page tries Discord\u2019s public widget API to see if the Nova bot ' +
+          'appears in the server member list. The widget is currently disabled on the server, so the check cannot ' +
+          'confirm presence and reports Unknown instead of guessing. Jarvis has no public live signal at all. ' +
+          'Neither check can see the bots\u2019 GitHub Actions workflows \u2014 runner status is tracked separately in Services above.';
+      }
+    }
+    async function pollLiveStatus() {
+      const now = new Date().toLocaleTimeString();
+      // Jarvis: nothing public to check — be honest about it.
+      liveState.jarvis = { status: "uncheckable", checkedAt: now };
+      // Nova: try the Discord widget API.
+      try {
+        const r = await fetch('https://discord.com/api/guilds/' + GUILD_ID + '/widget.json', { cache: 'no-store' });
+        if (!r.ok) throw new Error('http ' + r.status);
+        const j = await r.json();
+        if (!Array.isArray(j.members)) throw new Error('no members array');
+        const online = j.members.some(function (m) { return m && /nova nexus/i.test(m.username || ''); });
+        liveState.nova = online
+          ? { status: "online", checkedAt: now }
+          : { status: "offline", detail: "Not in the server member list right now", checkedAt: now };
+      } catch (e) {
+        liveState.nova = { status: "unknown", detail: "Widget API unreachable or disabled \u2014 cannot confirm presence", checkedAt: now };
+      }
+      renderLiveStatus();
+    }
 
     /* ---------- "checked" ticker ---------- */
     const checkedAt = Date.now();
@@ -1462,8 +1684,12 @@
     }
 
     /* ---------- boot ---------- */
+    renderAnnouncement();
     renderComponents();
+    renderJarvis();
     renderUptime();
+    renderUptimeCalendar();
+    renderLiveStatus();
     loadDiscordStatus();
     wireHeroTilt();
     // Play the uptime bars whenever they scroll into view (they sit below the fold)
@@ -1486,6 +1712,8 @@
     setInterval(tickChecked, 30000);
     pollBot();
     setInterval(pollBot, 60000);
+    pollLiveStatus();
+    setInterval(pollLiveStatus, 60000);
     wireSubscribe();
     wireReveal();
     wireDiscordLogin();
